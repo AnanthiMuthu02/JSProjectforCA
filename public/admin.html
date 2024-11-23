@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <div id="stats">
+    <h2>Overview</h2>
+    <ul>
+      <li>Total Employees: <span id="total-employees"></span></li>
+      <li>Total Projects: <span id="total-projects"></span></li>
+      <li>Active Projects: <span id="active-projects"></span></li>
+      <li>Completed Projects: <span id="completed-projects"></span></li>
+    </ul>
+  </div>
+
+  <div id="manage-employees">
+    <h2>Manage Employees</h2>
+    <form id="add-employee-form">
+      <input type="text" id="employee-name" placeholder="Name" required />
+      <input type="email" id="employee-email" placeholder="Email" required />
+      <input type="password" id="employee-password" placeholder="Password" required />
+      <select id="employee-role" required>
+        <option value="employee">Employee</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit">Add Employee</button>
+    </form>
+    <ul id="employee-list"></ul>
+  </div>
+
+  <div id="manage-projects">
+    <h2>Manage Projects</h2>
+    <form id="add-project-form">
+      <input type="text" id="project-title" placeholder="Project Title" required />
+      <textarea id="project-description" placeholder="Description" required></textarea>
+      <input type="number" id="project-budget" placeholder="Budget" required />
+      <input type="date" id="start-date" required />
+      <input type="date" id="end-date" required />
+      <button type="submit">Add Project</button>
+    </form>
+    <ul id="project-list"></ul>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

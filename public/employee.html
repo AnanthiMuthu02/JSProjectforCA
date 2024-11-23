@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Employee Panel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <h1>Employee Dashboard</h1>
+  <div id="my-projects">
+    <h2>My Projects</h2>
+    <ul id="project-list"></ul>
+  </div>
+
+  <div id="profile">
+    <h2>Update Profile</h2>
+    <form id="update-profile-form">
+      <input type="text" id="profile-name" placeholder="Name" required />
+      <input type="email" id="profile-email" placeholder="Email" required />
+      <button type="submit">Update</button>
+    </form>
+  </div>
+
+  <script>
+    async function fetchProjects() {
+      const response = await fetch(`/my-projects/1`, { // Replace 1 with the logged-in employee ID
+        method: "GET",
+        headers: { userRole: "employee" },
+      });
+      const projects = await response.json();
+      const projectList = document.getElementById("project-list");
+      projectList.innerHTML = "";
+      projects.forEach((project) => {
+        const li = document.createElement("li");
+        li.textContent = `${project.title} - ${project.status}`;
+        projectList.appendChild(li);
+      });
+    }
+
+    document
+      .getElementById("update-profile-form")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("profile-name").value;
+        const email = document.getElementById("profile-email").value;
+        const response = await fetch(`/update-profile/1`, { // Replace 1 with the logged-in employee ID
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            userRole: "employee",
+          },
+          body: JSON.stringify({ name, email }),
+        });
+        if (response.ok) {
+          alert("Profile updated successfully!");
+        } else {
+          alert("Error updating profile.");
+        }
+      });
+
+    fetchProjects();
+  </script>
+</body>
+</html>

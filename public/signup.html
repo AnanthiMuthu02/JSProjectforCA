@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Inline CSS for quick implementation */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    form {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    input, select, button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #0056b3;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .loading.active {
+      display: block;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+    }
+    .success {
+      color: green;
+      font-size: 14px;
+    }
+    h1 {
+      text-align: center;
+    }
+    p {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sign Up</h1>
+  <form id="signupForm">
+    <label for="name">Name</label>
+    <input type="text" id="name" placeholder="Name" required />
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="Email" required />
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Password" required />
+    <label for="role">Role</label>
+    <select id="role" required>
+      <option value="employee">Employee</option>
+    </select>
+    <button type="submit">Sign Up</button>
+    <div class="loading" id="loading">Signing up, please wait...</div>
+    <div id="message" class="error"></div>
+  </form>
+  <p>Already have an account? <a href="login.html">Login here</a></p>
+
+  <script>
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Get form elements
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+      const loading = document.getElementById("loading");
+      const message = document.getElementById("message");
+
+      // Clear previous messages and show loading
+      message.textContent = "";
+      loading.classList.add("active");
+
+      try {
+        const response = await fetch("/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role }),
+        });
+
+        // Handle success or failure
+        if (response.ok) {
+          loading.classList.remove("active");
+          message.className = "success";
+          message.textContent = "Sign-up successful! Redirecting to login...";
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 2000);
+        } else {
+          const errorText = await response.text();
+          throw new Error(errorText || "Sign-up failed.");
+        }
+      } catch (error) {
+        loading.classList.remove("active");
+        message.className = "error";
+        message.textContent = error.message || "An unknown error occurred.";
+      }
+    });
+  </script>
+</body>
+</html>
