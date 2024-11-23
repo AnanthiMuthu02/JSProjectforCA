@@ -14,19 +14,27 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 app.use(express.json());
-
-
-const bodyParser = require("body-parser");
-
-app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+// Session Management
+const sessions = {}; // In-memory sessions: { userId: { role: 'admin' or 'employee' } }
 
 // Middleware for role-based access
 const verifyRole = (role) => (req, res, next) => {
-  const { userRole } = req.headers;
-  if (userRole !== role) return res.status(403).send("Access denied");
+  console.log("Request headers:", req.headers); // Debug log headers
+  const userId = req.headers["user-id"]; // Retrieve userId from headers
+  console.log("User ID in headers:", userId); // Debug log userId
+  console.log("Sessions object:", sessions); // Debug log sessions
+
+  if (!userId || !sessions[userId] || sessions[userId].role !== role) {
+    console.error("Access denied: Role mismatch or user not logged in");
+    return res.status(403).send("Access denied");
+  }
+  console.log("Access granted to role:", sessions[userId].role);
   next();
 };
+
+
 
 // Routes
 
@@ -62,14 +70,33 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+// Login Route
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
-    if (err) return res.status(500).send("Database error");
-    if (!user || !(await bcrypt.compare(password, user.password)))
+    if (err) {
+      console.error("Database error:", err.message);
+      return res.status(500).send("Database error");
+    }
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      console.error("Invalid credentials");
       return res.status(401).send("Invalid credentials");
+    }
+
+    sessions[user.id] = { role: user.role }; // Save session
+    console.log("Session created:", sessions[user.id]); // Debug log
     res.json({ userId: user.id, role: user.role });
   });
+});
+
+
+// Logout Route (optional)
+app.post("/logout", (req, res) => {
+  const userId = req.headers["user-id"];
+  if (userId) {
+    delete sessions[userId];
+  }
+  res.send("Logged out successfully.");
 });
 
 // Admin Routes
