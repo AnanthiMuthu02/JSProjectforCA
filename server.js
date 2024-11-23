@@ -147,17 +147,35 @@ app.post("/employees", verifyRole("admin"), (req, res) => {
   );
 });
 
+// Assign project to employee
 app.post("/assign-project", verifyRole("admin"), (req, res) => {
   const { employee_id, project_id } = req.body;
+
+  if (!employee_id || !project_id) {
+    return res.status(400).send("Employee ID and Project ID are required.");
+  }
 
   db.run(
     "INSERT INTO project_assignments (employee_id, project_id) VALUES (?, ?)",
     [employee_id, project_id],
     function (err) {
-      if (err) return res.status(500).send("Database error");
-      res.json({ assignmentId: this.lastID });
+      if (err) {
+        console.error("Database error:", err.message);
+        return res.status(500).send("Failed to assign project.");
+      }
+      res.status(201).send("Project assigned successfully.");
     }
   );
+});
+// Fetch all employees
+app.get("/employees", verifyRole("admin"), (req, res) => {
+  db.all("SELECT id, name, email FROM users WHERE role = 'employee'", (err, rows) => {
+    if (err) {
+      console.error("Database error:", err.message);
+      return res.status(500).send("Failed to fetch employees.");
+    }
+    res.json(rows);
+  });
 });
 
 // Employee Routes
@@ -189,6 +207,17 @@ app.post("/update-profile/:id", verifyRole("employee"), (req, res) => {
     }
   );
 });
+// Fetch all projects
+app.get("/projects", verifyRole("admin"), (req, res) => {
+  db.all("SELECT id, title FROM projects", (err, rows) => {
+    if (err) {
+      console.error("Database error:", err.message);
+      return res.status(500).send("Failed to fetch projects.");
+    }
+    res.json(rows);
+  });
+});
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;
