@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Employees</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="manage-employees.html">Manage Employees</a>
+    <a href="manage-projects.html">Manage Projects</a>
+  </nav>
+  <div class="container">
+    <h1>Manage Employees</h1>
+    <form id="add-employee-form">
+      <input type="text" id="employee-name" placeholder="Name" required />
+      <input type="email" id="employee-email" placeholder="Email" required />
+      <input type="password" id="employee-password" placeholder="Password" required />
+      <select id="employee-role" required>
+        <option value="employee">Employee</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit">Add Employee</button>
+    </form>
+    <ul id="employee-list"></ul>
+  </div>
+  <script src="js/manage-employees.js"></script>
+</body>
+</html>

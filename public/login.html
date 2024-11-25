@@ -78,7 +78,7 @@
           localStorage.setItem("role", data.role);
   
           alert("Login successful!");
-          window.location.href = data.role === "admin" ? "admin.html" : "employee.html";
+          window.location.href = data.role === "admin" ? "admin-dashboard.html" : "employee.html";
         } else {
           alert("Invalid credentials.");
         }

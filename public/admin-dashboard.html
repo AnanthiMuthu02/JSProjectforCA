@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="manage-employees.html">Manage Employees</a>
+    <a href="manage-projects.html">Manage Projects</a>
+  </nav>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+    <div id="stats">
+      <h2>Overview</h2>
+      <ul>
+        <li>Total Employees: <span id="total-employees"></span></li>
+        <li>Total Projects: <span id="total-projects"></span></li>
+        <li>Active Projects: <span id="active-projects"></span></li>
+        <li>Completed Projects: <span id="completed-projects"></span></li>
+      </ul>
+    </div>
+
+    <div id="project-list">
+      <h2>All Projects</h2>
+      <ul id="all-projects"></ul>
+    </div>
+
+    <div id="employee-list">
+      <h2>All Employees</h2>
+      <ul id="all-employees"></ul>
+    </div>
+  </div>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

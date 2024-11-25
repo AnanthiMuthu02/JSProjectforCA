@@ -179,20 +179,28 @@ app.get("/employees", verifyRole("admin"), (req, res) => {
 });
 
 // Employee Routes
+// Fetch all projects assigned to a specific employee
 app.get("/my-projects/:id", verifyRole("employee"), (req, res) => {
   const employeeId = req.params.id;
 
-  db.all(
-    `SELECT projects.* FROM projects
-     JOIN project_assignments ON projects.id = project_assignments.project_id
-     WHERE project_assignments.employee_id = ?`,
-    [employeeId],
-    (err, rows) => {
-      if (err) return res.status(500).send("Database error");
-      res.json(rows);
+  const query = `
+    SELECT projects.id, projects.title, projects.description, projects.status, projects.start_date, projects.end_date
+    FROM projects
+    INNER JOIN project_assignments
+    ON projects.id = project_assignments.project_id
+    WHERE project_assignments.employee_id = ?
+  `;
+
+  db.all(query, [employeeId], (err, rows) => {
+    if (err) {
+      console.error("Error fetching projects for employee:", err.message);
+      return res.status(500).send("Failed to fetch projects.");
     }
-  );
+
+    res.json(rows);
+  });
 });
+
 
 app.post("/update-profile/:id", verifyRole("employee"), (req, res) => {
   const employeeId = req.params.id;
@@ -217,6 +225,41 @@ app.get("/projects", verifyRole("admin"), (req, res) => {
     res.json(rows);
   });
 });
+app.get('/employees-with-projects', (req, res) => {
+  const query = `
+    SELECT 
+      u.id AS employee_id,
+      u.name AS employee_name,
+      u.email AS employee_email,
+      GROUP_CONCAT(p.title, ', ') AS assigned_projects
+    FROM 
+      users u
+    LEFT JOIN 
+      project_assignments pa ON u.id = pa.employee_id
+    LEFT JOIN 
+      projects p ON pa.project_id = p.id
+    WHERE 
+      u.role = 'employee'
+    GROUP BY 
+      u.id
+  `;
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Failed to fetch employees with projects' });
+    } else {
+      const employees = rows.map(row => ({
+        id: row.employee_id,
+        name: row.employee_name,
+        email: row.employee_email,
+        projects: row.assigned_projects ? row.assigned_projects.split(', ') : []
+      }));
+      res.json(employees);
+    }
+  });
+});
+
 
 
 // Start the server

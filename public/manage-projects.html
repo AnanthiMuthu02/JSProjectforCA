@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Projects</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="manage-employees.html">Manage Employees</a>
+    <a href="manage-projects.html">Manage Projects</a>
+  </nav>
+  <div class="container">
+    <h1>Manage Projects</h1>
+    <form id="add-project-form">
+      <input type="text" id="project-title" placeholder="Project Title" required />
+      <textarea id="project-description" placeholder="Description" required></textarea>
+      <input type="number" id="project-budget" placeholder="Budget" required />
+      <input type="date" id="start-date" required />
+      <input type="date" id="end-date" required />
+      <button type="submit">Add Project</button>
+    </form>
+    <ul id="project-list"></ul>
+
+    <h2>Assign Project to Employee</h2>
+    <form id="assign-project-form">
+      <select id="assign-employee" required>
+        <option value="">Select Employee</option>
+      </select>
+      <select id="assign-project" required>
+        <option value="">Select Project</option>
+      </select>
+      <button type="submit">Assign Project</button>
+    </form>
+  </div>
+  <script src="js/manage-projects.js"></script>
+</body>
+</html>
