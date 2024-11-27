@@ -7,53 +7,96 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: #fff;
     }
-    form {
-      max-width: 300px;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    input {
-      display: block;
+
+    .login-container {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
       width: 100%;
+      max-width: 400px;
+      color: #333;
+    }
+
+    .login-container h1 {
+      margin-bottom: 20px;
+      color: #007bff;
+    }
+
+    .login-container form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .login-container input {
+      padding: 12px;
       margin-bottom: 15px;
-      padding: 10px;
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-    button {
-      background-color: #007BFF;
+
+    .login-container button {
+      background-color: #007bff;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px;
       font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
+      transition: background-color 0.3s;
     }
-    button:hover {
+
+    .login-container button:hover {
       background-color: #0056b3;
     }
+
+    .login-container .signup-link {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .login-container .signup-link a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .login-container .signup-link a:hover {
+      text-decoration: underline;
+    }
+
     .error {
       color: red;
       font-size: 14px;
       text-align: center;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Login</h1>
-  <form id="loginForm">
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <button type="submit">Login</button>
-    <p id="errorMessage" class="error"></p>
-  </form>
+  <div class="login-container">
+    <h1>Login</h1>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+      <p id="errorMessage" class="error"></p>
+    </form>
+    <div class="signup-link">
+      <p>Don't have an account? <a href="signup.html">Sign up here</a></p>
+    </div>
+  </div>
 
   <script>
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -80,13 +123,15 @@
           alert("Login successful!");
           window.location.href = data.role === "admin" ? "admin-dashboard.html" : "employee.html";
         } else {
-          alert("Invalid credentials.");
+          const errorMessage = document.getElementById("errorMessage");
+          errorMessage.textContent = "Invalid credentials. Please try again.";
         }
       } catch (error) {
         console.error("Error during login:", error);
+        const errorMessage = document.getElementById("errorMessage");
+        errorMessage.textContent = "An error occurred. Please try again.";
       }
     });
   </script>
-  
 </body>
 </html>
