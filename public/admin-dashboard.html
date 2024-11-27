@@ -4,7 +4,74 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav {
+      background-color: #007bff;
+      padding: 15px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 10px 15px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    nav a:hover {
+      background-color: #0056b3;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background-color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table th, table td {
+      padding: 15px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    table th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    table tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -14,26 +81,68 @@
   </nav>
   <div class="container">
     <h1>Admin Dashboard</h1>
+
     <div id="stats">
       <h2>Overview</h2>
-      <ul>
-        <li>Total Employees: <span id="total-employees"></span></li>
-        <li>Total Projects: <span id="total-projects"></span></li>
-        <li>Active Projects: <span id="active-projects"></span></li>
-        <li>Completed Projects: <span id="completed-projects"></span></li>
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Employees</td>
+            <td id="total-employees"></td>
+          </tr>
+          <tr>
+            <td>Total Projects</td>
+            <td id="total-projects"></td>
+          </tr>
+          <tr>
+            <td>Active Projects</td>
+            <td id="active-projects"></td>
+          </tr>
+          <tr>
+            <td>Completed Projects</td>
+            <td id="completed-projects"></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <div id="project-list">
       <h2>All Projects</h2>
-      <ul id="all-projects"></ul>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Budget</th>
+          </tr>
+        </thead>
+        <tbody id="all-projects"></tbody>
+      </table>
     </div>
 
     <div id="employee-list">
-      <h2>All Employees</h2>
-      <ul id="all-employees"></ul>
+      <h2>All Employees with Projects</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Assigned Projects</th>
+          </tr>
+        </thead>
+        <tbody id="employees-with-projects"></tbody>
+      </table>
     </div>
   </div>
+
   <script src="js/dashboard.js"></script>
 </body>
 </html>
