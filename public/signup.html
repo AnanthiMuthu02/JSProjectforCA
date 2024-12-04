@@ -73,44 +73,119 @@
   <form id="signupForm">
     <label for="name">Name</label>
     <input type="text" id="name" placeholder="Name" required />
+    
     <label for="email">Email</label>
     <input type="email" id="email" placeholder="Email" required />
+    
     <label for="password">Password</label>
     <input type="password" id="password" placeholder="Password" required />
+    
     <label for="role">Role</label>
     <select id="role" required>
       <option value="employee">Employee</option>
+      <option value="admin">Admin</option>
     </select>
+    
+    <!-- Skill Input -->
+    <label for="skills">Skills (select multiple)</label>
+    <input type="text" id="skills" placeholder="Select Skills" readonly required />
+    
+    <div id="skillsDropdown" style="display:none; border: 1px solid #ccc; background: #fff; max-height: 100px; overflow-y: scroll;">
+      <!-- Dynamic Skill Options Will Appear Here -->
+    </div>
+    
     <button type="submit">Sign Up</button>
     <div class="loading" id="loading">Signing up, please wait...</div>
     <div id="message" class="error"></div>
   </form>
+  
   <p>Already have an account? <a href="login.html">Login here</a></p>
 
   <script>
+    const skillsInput = document.getElementById("skills");
+    const skillsDropdown = document.getElementById("skillsDropdown");
+    const selectedSkills = new Set(); // Store selected skill IDs
+    const skillNames = new Set(); // Store selected skill names
+  
+    // Fetch skills from the /skills endpoint
+    async function loadSkills() {
+      try {
+        const response = await fetch('/skills');
+        if (!response.ok) {
+          throw new Error('Failed to fetch skills');
+        }
+        const skills = await response.json();
+        
+        // Populate the skills dropdown with the fetched skills
+        skillsDropdown.innerHTML = skills
+          .map(skill => `<div class="skill-item" data-id="${skill.id}">${skill.name}</div>`)
+          .join('');
+      } catch (error) {
+        console.error("Error fetching skills:", error);
+      }
+    }
+  
+    // Show skills dropdown when the input field is clicked
+    skillsInput.addEventListener("click", () => {
+      skillsDropdown.style.display = "block";
+    });
+  
+    // Handle skill selection
+    skillsDropdown.addEventListener("click", (e) => {
+      if (e.target.classList.contains("skill-item")) {
+        const skillId = e.target.getAttribute("data-id");
+        const skillName = e.target.textContent;
+  
+        if (selectedSkills.has(skillId)) {
+          selectedSkills.delete(skillId);
+          skillNames.delete(skillName);
+        } else {
+          selectedSkills.add(skillId);
+          skillNames.add(skillName);
+        }
+  
+        // Update the input field with selected skills
+        skillsInput.value = [...skillNames].join(", ");
+      }
+    });
+  
+    // Call loadSkills when the page loads to populate the skill dropdown
+    loadSkills();
+  
+    // Handle form submission
     document.getElementById("signupForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-
+  
       // Get form elements
       const name = document.getElementById("name").value;
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       const role = document.getElementById("role").value;
+  
       const loading = document.getElementById("loading");
       const message = document.getElementById("message");
-
+  
+      // Get selected skill IDs
+      const selectedSkillIds = [...selectedSkills];
+  
+      // Validation: Ensure at least one skill is selected if the role is 'employee'
+      if (!name || !email || !password || !role || (role === 'employee' && selectedSkillIds.length === 0)) {
+        message.textContent = "All fields are required, including at least one skill.";
+        message.className = "error";
+        return;
+      }
+  
       // Clear previous messages and show loading
       message.textContent = "";
       loading.classList.add("active");
-
+  
       try {
         const response = await fetch("/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password, role }),
+          body: JSON.stringify({ name, email, password, role, skills: selectedSkillIds }),
         });
-
-        // Handle success or failure
+  
         if (response.ok) {
           loading.classList.remove("active");
           message.className = "success";
@@ -129,5 +204,6 @@
       }
     });
   </script>
+  
 </body>
 </html>
