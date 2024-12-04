@@ -41,13 +41,15 @@ const verifyRole = (role) => (req, res, next) => {
 // Sign-Up Route
 app.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, skills } = req.body;
 
-    if (!name || !email || !password || !role) {
-      console.error("Validation failed: Missing fields.");
-      return res.status(400).send("All fields are required.");
+    // Validation: Check if all required fields are present, including at least one skill
+    if (!name || !email || !password || !role || (role === 'employee' && (!skills || skills.length === 0))) {
+      console.error("Validation failed: Missing fields or no skills selected.");
+      return res.status(400).send("All fields are required, including at least one skill.");
     }
 
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
@@ -61,7 +63,30 @@ app.post("/signup", async (req, res) => {
           }
           return res.status(500).send("Database error.");
         }
-        res.status(201).send("User created successfully.");
+
+        // Get the user ID of the newly created user
+        const userId = this.lastID;
+
+        // Insert skills into the user_skills table
+        if (skills && skills.length > 0) {
+          const placeholders = skills.map(() => "(?, ?)").join(",");
+          const flatValues = skills.flatMap(skillId => [userId, skillId]);
+
+          db.run(
+            `INSERT INTO user_skills (user_id, skill_id) VALUES ${placeholders}`,
+            flatValues,
+            (err) => {
+              if (err) {
+                console.error("Error inserting skills:", err.message);
+                return res.status(500).send("Error assigning skills to user.");
+              }
+
+              res.status(201).send("User created successfully.");
+            }
+          );
+        } else {
+          res.status(201).send("User created successfully.");
+        }
       }
     );
   } catch (error) {
@@ -69,6 +94,9 @@ app.post("/signup", async (req, res) => {
     res.status(500).send("Server error.");
   }
 });
+
+
+
 
 // Login Route
 app.post("/login", (req, res) => {
@@ -266,6 +294,16 @@ app.get('/projects_details',verifyRole("admin"), (req, res) => {
       console.error('Error fetching projects:', err);
       return res.status(500).json({ message: 'Error fetching projects' });
     }
+    res.json(rows);
+  });
+});
+app.get("/skills", (req, res) => {
+  db.all("SELECT id, name FROM skills", [], (err, rows) => {
+    if (err) {
+      console.error("Database error:", err.message);
+      return res.status(500).json({ error: "Database error" });
+    }
+    // Send the list of skills in JSON format
     res.json(rows);
   });
 });
