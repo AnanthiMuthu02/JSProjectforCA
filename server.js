@@ -260,7 +260,15 @@ app.get('/employees-with-projects', (req, res) => {
   });
 });
 
-
+app.get('/projects_details',verifyRole("admin"), (req, res) => {
+  db.all('SELECT id, title, status, budget FROM projects', [], (err, rows) => {
+    if (err) {
+      console.error('Error fetching projects:', err);
+      return res.status(500).json({ message: 'Error fetching projects' });
+    }
+    res.json(rows);
+  });
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;

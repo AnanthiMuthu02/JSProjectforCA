@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch and display all projects
   const fetchProjects = async () => {
     try {
-      const response = await fetch("/projects", {
+      const response = await fetch("/projects_details", {
         headers: {
           "Content-Type": "application/json",
           "user-id": userId,
