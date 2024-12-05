@@ -5,6 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Projects</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    nav {
+      background-color: #007BFF;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 15px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .project-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .project-list li {
+      background: #fff;
+      margin: 10px 0;
+      padding: 10px 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .modal-header .close {
+      font-size: 20px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    .form-control {
+      margin-bottom: 15px;
+    }
+
+    .form-control label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .form-control input,
+    .form-control textarea,
+    .form-control select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -14,27 +133,75 @@
   </nav>
   <div class="container">
     <h1>Manage Projects</h1>
-    <form id="add-project-form">
-      <input type="text" id="project-title" placeholder="Project Title" required />
-      <textarea id="project-description" placeholder="Description" required></textarea>
-      <input type="number" id="project-budget" placeholder="Budget" required />
-      <input type="date" id="start-date" required />
-      <input type="date" id="end-date" required />
-      <button type="submit">Add Project</button>
-    </form>
-    <ul id="project-list"></ul>
+    <button id="add-project-btn">Add Project</button>
+    <ul id="project-list" class="project-list"></ul>
 
     <h2>Assign Project to Employee</h2>
-    <form id="assign-project-form">
-      <select id="assign-employee" required>
-        <option value="">Select Employee</option>
-      </select>
-      <select id="assign-project" required>
-        <option value="">Select Project</option>
-      </select>
-      <button type="submit">Assign Project</button>
-    </form>
+    <button id="assign-project-btn">Assign Project</button>
   </div>
+
+  <!-- Add Project Modal -->
+  <div id="add-project-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add Project</h3>
+        <span class="close" data-close="add-project-modal">&times;</span>
+      </div>
+      <form id="add-project-form">
+        <div class="form-control">
+          <label for="project-title">Project Title</label>
+          <input type="text" id="project-title" required />
+        </div>
+        <div class="form-control">
+          <label for="project-description">Description</label>
+          <textarea id="project-description" required></textarea>
+        </div>
+        <div class="form-control">
+          <label for="project-budget">Budget</label>
+          <input type="number" id="project-budget" required />
+        </div>
+        <div class="form-control">
+          <label for="start-date">Start Date</label>
+          <input type="date" id="start-date" required />
+        </div>
+        <div class="form-control">
+          <label for="end-date">End Date</label>
+          <input type="date" id="end-date" required />
+        </div>
+        <div class="form-control">
+          <label for="project-skills">Skills Required</label>
+          <select id="project-skills" multiple></select>
+        </div>
+        <button type="submit">Add Project</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assign Project Modal -->
+  <div id="assign-project-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Assign Project</h3>
+        <span class="close" data-close="assign-project-modal">&times;</span>
+      </div>
+      <form id="assign-project-form">
+        <div class="form-control">
+          <label for="assign-employee">Select Employee</label>
+          <select id="assign-employee" required>
+            <option value="">Select Employee</option>
+          </select>
+        </div>
+        <div class="form-control">
+          <label for="assign-project">Select Project</label>
+          <select id="assign-project" required>
+            <option value="">Select Project</option>
+          </select>
+        </div>
+        <button type="submit">Assign Project</button>
+      </form>
+    </div>
+  </div>
+
   <script src="js/manage-projects.js"></script>
 </body>
 </html>
