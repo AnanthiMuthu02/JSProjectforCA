@@ -150,15 +150,41 @@ app.get("/dashboard", verifyRole("admin"), (req, res) => {
 });
 
 app.post("/projects", verifyRole("admin"), (req, res) => {
-  const { title, description, budget, start_date, end_date } = req.body;
-  db.run(
-    "INSERT INTO projects (title, description, budget, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-    [title, description, budget, start_date, end_date],
-    function (err) {
-      if (err) return res.status(500).send("Database error");
-      res.json({ projectId: this.lastID });
-    }
-  );
+  const { title, description, budget, start_date, end_date, skills } = req.body;
+
+  if (!skills || !Array.isArray(skills) || skills.length === 0) {
+    return res.status(400).send("Skills are required for the project.");
+  }
+
+  db.serialize(() => {
+    // Insert the project into the database
+    db.run(
+      "INSERT INTO projects (title, description, budget, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
+      [title, description, budget, start_date, end_date],
+      function (err) {
+        if (err) {
+          return res.status(500).send("Database error while adding project.");
+        }
+
+        const projectId = this.lastID;
+
+        // Insert the project skills into the project_skills table
+        const skillInsertQuery = `INSERT INTO project_skills (project_id, skill_id) VALUES (?, ?)`;
+        const stmt = db.prepare(skillInsertQuery);
+
+        skills.forEach((skillId) => {
+          stmt.run([projectId, skillId], (err) => {
+            if (err) {
+              console.error("Error inserting project skill:", err.message);
+            }
+          });
+        });
+
+        stmt.finalize();
+        res.json({ projectId, message: "Project created successfully with skills." });
+      }
+    );
+  });
 });
 
 app.post("/employees", verifyRole("admin"), (req, res) => {
