@@ -219,6 +219,24 @@ app.get("/employees/:employeeId/skills", (req, res) => {
     res.json(rows);
   });
 });
+// Endpoint to get all employees with their skills
+app.get("/projects/:projectId/employees", (req, res) => {
+  const { projectId } = req.params;
+  const query = `
+    SELECT u.id AS employee_id, u.name, u.email
+    FROM users u
+    JOIN project_assignments pa ON pa.employee_id = u.id
+    WHERE pa.project_id = ?
+  `;
+  
+  db.all(query, [projectId], (err, rows) => {
+    if (err) {
+      console.error("Error fetching employees for project:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+    res.json(rows);
+  });
+});
 
 // Assign project to employee
 app.post("/assign-project", verifyRole("admin"), (req, res) => {
@@ -241,11 +259,19 @@ app.post("/assign-project", verifyRole("admin"), (req, res) => {
   );
 });
 // Fetch all employees
-app.get("/employees", verifyRole("admin"), (req, res) => {
-  db.all("SELECT id, name, email FROM users WHERE role = 'employee'", (err, rows) => {
+app.get("/employees", (req, res) => {
+  const query = `
+    SELECT u.id AS employee_id, u.name, u.email, GROUP_CONCAT(s.name) AS skills
+    FROM users u
+    LEFT JOIN user_skills us ON us.user_id = u.id
+    LEFT JOIN skills s ON s.id = us.skill_id
+    GROUP BY u.id
+  `;
+  
+  db.all(query, (err, rows) => {
     if (err) {
-      console.error("Database error:", err.message);
-      return res.status(500).send("Failed to fetch employees.");
+      console.error("Error fetching employees:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
     }
     res.json(rows);
   });
