@@ -201,6 +201,25 @@ app.post("/employees", verifyRole("admin"), (req, res) => {
   );
 });
 
+// Endpoint to get skills of a specific employee
+app.get("/employees/:employeeId/skills", (req, res) => {
+  const { employeeId } = req.params;
+  const query = `
+    SELECT s.name
+    FROM skills s
+    JOIN user_skills us ON us.skill_id = s.id
+    WHERE us.user_id = ?
+  `;
+  
+  db.all(query, [employeeId], (err, rows) => {
+    if (err) {
+      console.error("Error fetching employee skills:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+    res.json(rows);
+  });
+});
+
 // Assign project to employee
 app.post("/assign-project", verifyRole("admin"), (req, res) => {
   const { employee_id, project_id } = req.body;
