@@ -85,6 +85,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Mark a project as completed
+  const markAsCompleted = async (projectId) => {
+    try {
+      const response = await fetch(`/projects/${projectId}/complete`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        alert("Project marked as completed.");
+        fetchProjects(); // Refresh the project list
+      } else {
+        console.error("Failed to mark project as completed:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error marking project as completed:", error);
+    }
+  };
+
+  // Make the function accessible globally
+  window.markAsCompleted = markAsCompleted;
+
   // Fetch and populate project list
   const fetchProjects = async () => {
     try {
@@ -99,10 +123,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const projects = await response.json();
         const projectList = document.getElementById("project-list");
         const projectDropdown = document.getElementById("assign-project");
+
         projectList.innerHTML = projects
           .map(
             (project) =>
-              `<li>${project.title} (Budget: ${project.budget})</li>`
+              `<li>
+        ${project.title} (Budget: ${project.budget}, Status: ${project.status})
+        <button onclick="markAsCompleted('${project.id}')">Mark as Completed</button>
+        <button onclick="deleteProject('${project.id}')">Delete</button>
+      </li>`
           )
           .join("");
 
@@ -121,6 +150,40 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching projects:", error);
     }
   };
+
+  // Delete project
+  const deleteProject = async (projectId) => {
+    if (!projectId) {
+      console.error("Project ID is undefined.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/projects/${projectId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "user-id": userId, // Include userId in headers
+        },
+      });
+
+      if (response.ok) {
+        alert("Project deleted successfully!");
+        fetchProjects(); // Refresh the project list
+      } else {
+        console.error("Failed to delete project:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
+  };
+
+  // Make the function accessible globally
+  window.deleteProject = deleteProject;
 
   // Fetch and populate employee list for assignment
   const fetchEmployees = async () => {
@@ -185,29 +248,31 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error assigning project:", error);
     }
   });
+
+  // Modal handling
   const modals = document.querySelectorAll(".modal");
-    const addProjectBtn = document.getElementById("add-project-btn");
-    const assignProjectBtn = document.getElementById("assign-project-btn");
+  const addProjectBtn = document.getElementById("add-project-btn");
+  const assignProjectBtn = document.getElementById("assign-project-btn");
 
-    addProjectBtn.addEventListener("click", () => {
-      document.getElementById("add-project-modal").style.display = "block";
-    });
+  addProjectBtn.addEventListener("click", () => {
+    document.getElementById("add-project-modal").style.display = "block";
+  });
 
-    assignProjectBtn.addEventListener("click", () => {
-      document.getElementById("assign-project-modal").style.display = "block";
-    });
+  assignProjectBtn.addEventListener("click", () => {
+    document.getElementById("assign-project-modal").style.display = "block";
+  });
 
-    modals.forEach((modal) => {
-      modal.addEventListener("click", (e) => {
-        if (e.target.classList.contains("modal")) {
-          modal.style.display = "none";
-        }
-      });
-
-      modal.querySelector(".close").addEventListener("click", () => {
+  modals.forEach((modal) => {
+    modal.addEventListener("click", (e) => {
+      if (e.target.classList.contains("modal")) {
         modal.style.display = "none";
-      });
+      }
     });
+
+    modal.querySelector(".close").addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  });
 
   // Initialize project, employee, and skills lists on page load
   fetchProjects();
