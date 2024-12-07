@@ -1,14 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Home</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to IT Management System</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #007BFF;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .container h2 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .container form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 8px;
+      font-size: 1em;
+      color: #555;
+    }
+
+    input, select, button {
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    input[type="text"], input[type="email"], input[type="password"] {
+      background-color: #f9f9f9;
+    }
+
+    select {
+      background-color: #f9f9f9;
+    }
+
+    button {
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+      border: none;
+      font-size: 1.1em;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .message {
+      font-size: 0.9em;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .message.error {
+      color: red;
+    }
+
+    .message.success {
+      color: green;
+    }
+
+    .skills-container {
+      position: relative;
+    }
+
+    .skills-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      display: none;
+      z-index: 10;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .skill-item {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .skill-item:hover {
+      background-color: #f1f1f1;
+    }
+
+    .selected-skills {
+      display: block;
+      color: #007BFF;
+    }
+
+    p {
+      text-align: center;
+      font-size: 1em;
+    }
+
+    p a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to the Web Application</h1>
-  <div>
-    <a href="login.html">Login</a>
-    <a href="signup.html">Sign Up</a>
+
+  <h1>Welcome to IT Management System</h1>
+
+  <div class="container">
+    <h2>Sign Up</h2>
+    <form id="signupForm">
+      <label for="name">Name</label>
+      <input type="text" id="name" placeholder="Name" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Password" required />
+
+      <label for="role">Role</label>
+      <select id="role" required>
+        <option value="employee">Employee</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <!-- Skill Input with Dropdown -->
+      <label for="skills">Skills (select multiple)</label>
+      <div class="skills-container">
+        <input type="text" id="skills" placeholder="Select Skills" readonly required />
+        <div id="skillsDropdown" class="skills-dropdown"></div>
+      </div>
+
+      <button type="submit">Sign Up</button>
+      <div class="loading" id="loading">Signing up, please wait...</div>
+      <div id="message" class="message"></div>
+    </form>
+
+    <p>Already have an account? <a href="login.html">Login here</a></p>
   </div>
+
+  <script>
+    const skillsInput = document.getElementById("skills");
+    const skillsDropdown = document.getElementById("skillsDropdown");
+    const selectedSkills = new Set(); // Store selected skill IDs
+    const skillNames = new Set(); // Store selected skill names
+
+    // Fetch skills from the /skills endpoint
+    async function loadSkills() {
+      try {
+        const response = await fetch('/skills');
+        if (!response.ok) {
+          throw new Error('Failed to fetch skills');
+        }
+        const skills = await response.json();
+
+        // Populate the skills dropdown with the fetched skills
+        skillsDropdown.innerHTML = skills
+          .map(skill => `<div class="skill-item" data-id="${skill.id}">${skill.name}</div>`)
+          .join('');
+      } catch (error) {
+        console.error("Error fetching skills:", error);
+      }
+    }
+
+    // Show skills dropdown when the input field is clicked
+    skillsInput.addEventListener("click", () => {
+      skillsDropdown.style.display = "block";
+    });
+
+    // Hide skills dropdown when clicking outside
+    document.addEventListener("click", (event) => {
+      if (!skillsInput.contains(event.target) && !skillsDropdown.contains(event.target)) {
+        skillsDropdown.style.display = "none";
+      }
+    });
+
+    // Handle skill selection
+    skillsDropdown.addEventListener("click", (e) => {
+      if (e.target.classList.contains("skill-item")) {
+        const skillId = e.target.getAttribute("data-id");
+        const skillName = e.target.textContent;
+
+        if (selectedSkills.has(skillId)) {
+          selectedSkills.delete(skillId);
+          skillNames.delete(skillName);
+        } else {
+          selectedSkills.add(skillId);
+          skillNames.add(skillName);
+        }
+
+        // Update the input field with selected skills
+        skillsInput.value = [...skillNames].join(", ");
+      }
+    });
+
+    // Call loadSkills when the page loads to populate the skill dropdown
+    loadSkills();
+
+    // Handle form submission
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Get form elements
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      const loading = document.getElementById("loading");
+      const message = document.getElementById("message");
+
+      // Get selected skill IDs
+      const selectedSkillIds = [...selectedSkills];
+
+      // Validation: Ensure at least one skill is selected if the role is 'employee'
+      if (!name || !email || !password || !role || (role === 'employee' && selectedSkillIds.length === 0)) {
+        message.textContent = "All fields are required, including at least one skill.";
+        message.className = "error";
+        return;
+      }
+
+      // Clear previous messages and show loading
+      message.textContent = "";
+      loading.classList.add("active");
+
+      try {
+        const response = await fetch("/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role, skills: selectedSkillIds }),
+        });
+
+        if (response.ok) {
+          loading.classList.remove("active");
+          message.className = "success";
+          message.textContent = "Sign-up successful! Redirecting to login...";
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 2000);
+        } else {
+          const errorText = await response.text();
+          throw new Error(errorText || "Sign-up failed.");
+        }
+      } catch (error) {
+        loading.classList.remove("active");
+        message.className = "error";
+        message.textContent = error.message || "An unknown error occurred.";
+      }
+    });
+  </script>
 </body>
 </html>
