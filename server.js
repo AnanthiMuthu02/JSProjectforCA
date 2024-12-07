@@ -15,7 +15,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
-
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'home.html')); // assuming your home page is index.html in the 'public' folder
+});
 // Session Management
 const sessions = {}; // In-memory sessions: { userId: { role: 'admin' or 'employee' } }
 
@@ -187,6 +189,7 @@ app.post("/projects", verifyRole("admin"), (req, res) => {
   });
 });
 
+
 app.post("/employees", verifyRole("admin"), (req, res) => {
   const { name, email, role, department, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -199,43 +202,6 @@ app.post("/employees", verifyRole("admin"), (req, res) => {
       res.json({ employeeId: this.lastID });
     }
   );
-});
-
-// Endpoint to get skills of a specific employee
-app.get("/employees/:employeeId/skills", (req, res) => {
-  const { employeeId } = req.params;
-  const query = `
-    SELECT s.name
-    FROM skills s
-    JOIN user_skills us ON us.skill_id = s.id
-    WHERE us.user_id = ?
-  `;
-  
-  db.all(query, [employeeId], (err, rows) => {
-    if (err) {
-      console.error("Error fetching employee skills:", err);
-      return res.status(500).json({ message: "Internal Server Error" });
-    }
-    res.json(rows);
-  });
-});
-// Endpoint to get all employees with their skills
-app.get("/projects/:projectId/employees", (req, res) => {
-  const { projectId } = req.params;
-  const query = `
-    SELECT u.id AS employee_id, u.name, u.email
-    FROM users u
-    JOIN project_assignments pa ON pa.employee_id = u.id
-    WHERE pa.project_id = ?
-  `;
-  
-  db.all(query, [projectId], (err, rows) => {
-    if (err) {
-      console.error("Error fetching employees for project:", err);
-      return res.status(500).json({ message: "Internal Server Error" });
-    }
-    res.json(rows);
-  });
 });
 
 // Assign project to employee
@@ -259,23 +225,44 @@ app.post("/assign-project", verifyRole("admin"), (req, res) => {
   );
 });
 // Fetch all employees
+// Endpoint to get all employees with their skills
 app.get("/employees", (req, res) => {
-  const query = `
-    SELECT u.id AS employee_id, u.name, u.email, GROUP_CONCAT(s.name) AS skills
-    FROM users u
-    LEFT JOIN user_skills us ON us.user_id = u.id
-    LEFT JOIN skills s ON s.id = us.skill_id
-    GROUP BY u.id
-  `;
-  
-  db.all(query, (err, rows) => {
+  db.all("SELECT id, name, email FROM users WHERE role = 'employee'", (err, rows) => {
     if (err) {
-      console.error("Error fetching employees:", err);
-      return res.status(500).json({ message: "Internal Server Error" });
+      console.error("Database error:", err.message);
+      return res.status(500).send("Failed to fetch employees.");
     }
     res.json(rows);
   });
 });
+
+
+
+
+app.patch("/projects/:projectId/complete", (req, res) => {
+  const { projectId } = req.params;
+
+  const query = `
+    UPDATE projects
+    SET status = 'completed'
+    WHERE id = ?
+  `;
+
+  db.run(query, [projectId], function (err) {
+    if (err) {
+      console.error("Error marking project as complete:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    res.json({ message: "Project marked as complete." });
+  });
+});
+
+
 
 // Employee Routes
 // Fetch all projects assigned to a specific employee
@@ -299,20 +286,202 @@ app.get("/my-projects/:id", verifyRole("employee"), (req, res) => {
     res.json(rows);
   });
 });
+app.delete("/projects/:projectId/employees/:employeeId", (req, res) => {
+  const { projectId, employeeId } = req.params;
 
+  // Step 1: Check if the project and employee assignment exists
+  db.get(
+    "SELECT * FROM project_assignments WHERE project_id = ? AND employee_id = ?",
+    [projectId, employeeId],
+    (err, row) => {
+      if (err) {
+        console.error("Error fetching assignment:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
 
-app.post("/update-profile/:id", verifyRole("employee"), (req, res) => {
-  const employeeId = req.params.id;
-  const { name, email, skills } = req.body;
+      if (!row) {
+        // No assignment found
+        return res.status(404).json({ message: "Employee not assigned to this project." });
+      }
 
-  db.run(
-    "UPDATE users SET name = ?, email = ? WHERE id = ?",
-    [name, email, employeeId],
-    (err) => {
-      if (err) return res.status(500).send("Database error");
-      res.send("Profile updated successfully");
+      // Step 2: Start the deletion process with data integrity in mind
+      db.serialize(() => {
+        // Step 2.1: Delete any associated project skills if necessary
+        db.run(
+          "DELETE FROM project_skills WHERE project_id = ?",
+          [projectId],
+          function (err) {
+            if (err) {
+              console.error("Error removing project skills:", err);
+              return res.status(500).json({ message: "Failed to remove associated skills" });
+            }
+
+            // Step 2.2: Delete the employee's assignment from the project
+            db.run(
+              "DELETE FROM project_assignments WHERE project_id = ? AND employee_id = ?",
+              [projectId, employeeId],
+              function (err) {
+                if (err) {
+                  console.error("Error removing employee from project:", err);
+                  return res.status(500).json({ message: "Failed to remove employee from project" });
+                }
+
+                if (this.changes === 0) {
+                  return res.status(404).json({ message: "Employee not assigned to this project." });
+                }
+
+                // Step 2.3: Log the activity of removing the employee
+                db.run(
+                  "INSERT INTO activity_logs (action) VALUES (?)",
+                  [`Removed employee ${employeeId} from project ${projectId}`],
+                  function (err) {
+                    if (err) {
+                      console.error("Error logging activity:", err);
+                    }
+                  }
+                );
+
+                // Return success response
+                res.json({ message: "Employee successfully removed from project." });
+              }
+            );
+          }
+        );
+      });
     }
   );
+});
+
+app.delete("/projects/:projectId", (req, res) => {
+  const { projectId } = req.params;
+
+  // Check if the project exists
+  db.get(
+    "SELECT * FROM projects WHERE id = ?",
+    [projectId],
+    (err, row) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      if (!row) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Start a transaction to maintain data integrity
+      db.serialize(() => {
+        // Delete project assignments for this project
+        db.run(
+          "DELETE FROM project_assignments WHERE project_id = ?",
+          [projectId],
+          function (err) {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: "Failed to delete project assignments" });
+            }
+
+            // Delete project skills related to this project
+            db.run(
+              "DELETE FROM project_skills WHERE project_id = ?",
+              [projectId],
+              function (err) {
+                if (err) {
+                  console.error(err);
+                  return res.status(500).json({ error: "Failed to delete project skills" });
+                }
+
+                // Finally, delete the project itself
+                db.run(
+                  "DELETE FROM projects WHERE id = ?",
+                  [projectId],
+                  function (err) {
+                    if (err) {
+                      console.error(err);
+                      return res.status(500).json({ error: "Failed to delete project" });
+                    }
+
+                    // Log the activity for the project deletion
+                    db.run(
+                      "INSERT INTO activity_logs (action) VALUES (?)",
+                      [`Deleted project ${projectId}`]
+                    );
+
+                    return res.status(200).json({ message: "Project deleted successfully" });
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    }
+  );
+});
+
+app.put("/users/:id", async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const { name, email, password, skills } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ error: "Name and email are required." });
+  }
+
+  try {
+    db.serialize(() => {
+      // Update user's name and email
+      const updateUserQuery = `UPDATE users SET name = ?, email = ? WHERE id = ?`;
+      db.run(updateUserQuery, [name, email, userId], function (err) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "Failed to update user profile." });
+        }
+
+        // If password is provided, hash and update it
+        if (password) {
+          const hashedPassword = bcrypt.hashSync(password, 10);
+          const updatePasswordQuery = `UPDATE users SET password = ? WHERE id = ?`;
+          db.run(updatePasswordQuery, [hashedPassword, userId], (err) => {
+            if (err) {
+              console.error(err);
+              return res
+                .status(500)
+                .json({ error: "Failed to update password." });
+            }
+          });
+        }
+
+        // Update user's skills
+        if (skills && Array.isArray(skills)) {
+          // Delete existing skills for the user
+          const deleteSkillsQuery = `DELETE FROM user_skills WHERE user_id = ?`;
+          db.run(deleteSkillsQuery, [userId], (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: "Failed to update skills." });
+            }
+
+            // Insert new skills
+            const insertSkillQuery = `INSERT INTO user_skills (user_id, skill_id) VALUES (?, ?)`;
+            skills.forEach((skillId) => {
+              db.run(insertSkillQuery, [userId, skillId], (err) => {
+                if (err) {
+                  console.error(err);
+                }
+              });
+            });
+          });
+        }
+
+        return res
+          .status(200)
+          .json({ message: "User profile updated successfully." });
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error." });
+  }
 });
 // Fetch all projects
 app.get("/projects", verifyRole("admin"), (req, res) => {
@@ -324,12 +493,13 @@ app.get("/projects", verifyRole("admin"), (req, res) => {
     res.json(rows);
   });
 });
-app.get('/employees-with-projects', (req, res) => {
+app.get('/employees-with-projects', verifyRole("admin"), (req, res) => {
   const query = `
     SELECT 
       u.id AS employee_id,
       u.name AS employee_name,
       u.email AS employee_email,
+      u.role AS employee_role,   -- Include role in the query
       GROUP_CONCAT(p.title, ', ') AS assigned_projects
     FROM 
       users u
@@ -352,12 +522,14 @@ app.get('/employees-with-projects', (req, res) => {
         id: row.employee_id,
         name: row.employee_name,
         email: row.employee_email,
+        role: row.employee_role,  // Include role in the response
         projects: row.assigned_projects ? row.assigned_projects.split(', ') : []
       }));
       res.json(employees);
     }
   });
 });
+
 
 app.get('/projects_details',verifyRole("admin"), (req, res) => {
   db.all('SELECT id, title, status, budget FROM projects', [], (err, rows) => {
@@ -379,6 +551,89 @@ app.get("/skills", (req, res) => {
   });
 });
 
+app.delete("/employees/:id", verifyRole("admin"), (req, res) => {
+  const employeeId = req.params.id;
+
+  // Step 1: Check if the employee exists
+  db.get("SELECT id FROM users WHERE id = ?", [employeeId], (err, row) => {
+    if (err) {
+      console.error("Database error:", err.message);
+      return res.status(500).send("Database error.");
+    }
+
+    if (!row) {
+      return res.status(404).send("Employee not found.");
+    }
+
+    // Step 2: Start the deletion process
+    db.serialize(() => {
+      // Step 2.1: Delete the employee's assignments from projects
+      db.run(
+        "DELETE FROM project_assignments WHERE employee_id = ?",
+        [employeeId],
+        function (err) {
+          if (err) {
+            console.error("Error removing employee from projects:", err.message);
+            return res.status(500).send("Failed to remove employee from projects.");
+          }
+
+          // Step 2.2: Delete the employee's skills
+          db.run(
+            "DELETE FROM user_skills WHERE user_id = ?",
+            [employeeId],
+            function (err) {
+              if (err) {
+                console.error("Error removing employee skills:", err.message);
+                return res.status(500).send("Failed to remove employee skills.");
+              }
+
+              // Step 2.3: Log the activity (optional for audit purposes)
+              db.run(
+                "INSERT INTO activity_logs (action) VALUES (?)",
+                [`Deleted employee ${employeeId}`],
+                function (err) {
+                  if (err) {
+                    console.error("Error logging activity:", err.message);
+                  }
+                }
+              );
+
+              // Step 2.4: Finally, delete the employee
+              db.run(
+                "DELETE FROM users WHERE id = ?",
+                [employeeId],
+                function (err) {
+                  if (err) {
+                    console.error("Error deleting employee:", err.message);
+                    return res.status(500).send("Failed to delete employee.");
+                  }
+
+                  res.status(200).send("Employee deleted successfully.");
+                }
+              );
+            }
+          );
+        }
+      );
+    });
+  });
+});
+
+app.get("/projects/active", verifyRole("admin"), (req, res) => {
+  // Query to select all active projects (assuming active projects have a status 'active')
+  const sql = "SELECT * FROM projects WHERE status = 'active'";
+
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error("Database error:", err.message);
+      return res.status(500).send("Failed to fetch active projects.");
+    }
+
+    // Return the active projects as a JSON response
+    res.json(rows);
+  });
+});
+module.exports = app
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on http://localhost:3000`));
