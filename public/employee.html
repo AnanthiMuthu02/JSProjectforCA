@@ -1,389 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Employee Dashboard</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
-  <style>
-    /* General Styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      background-color: #f5f7fa;
-      color: #333;
-      padding: 20px;
-      line-height: 1.6;
-    }
-
-    /* Navigation Bar */
-    nav {
-      background-color: #007BFF;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin-right: 15px;
-      font-weight: 600;
-      font-size: 1rem;
-    }
-
-    nav .logout-btn {
-      background-color: #e74c3c;
-      color: white;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s ease;
-    }
-
-    nav .logout-btn:hover {
-      background-color: #c0392b;
-    }
-
-    /* Container */
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    h1, h2 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 20px;
-    }
-
-    /* Card Styles */
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      padding: 25px;
-      margin-bottom: 30px;
-    }
-
-    .card h2 {
-      margin-bottom: 15px;
-      font-size: 1.5rem;
-      color: #34495e;
-    }
-
-    /* Form Styles */
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    form input, form select, form button {
-      font-size: 1rem;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      transition: border-color 0.3s ease;
-    }
-
-    form input:focus, form select:focus {
-      outline: none;
-      border-color: #3498db;
-    }
-
-    form button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      font-weight: 600;
-    }
-
-    form button:hover {
-      background-color: #2980b9;
-    }
-
-    /* Project List Styles */
-    .project-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .project-list li {
-      background: #f0f4f8;
-      margin-bottom: 15px;
-      padding: 15px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .project-list li h3 {
-      margin-bottom: 10px;
-      color: #2c3e50;
-    }
-
-    .project-details p {
-      margin-bottom: 5px;
-      color: #7f8c8d;
-    }
-
-    /* Message Styles */
-    .message {
-      text-align: center;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 15px;
-      font-weight: 600;
-    }
-
-    .success {
-      background-color: #dff0d8;
-      color: #3c763d;
-    }
-
-    .error {
-      background-color: #f2dede;
-      color: #a94442;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 600px) {
-      nav {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      nav a {
-        margin-bottom: 10px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-    }
-  </style>
+  <title>Employee Panel</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <nav>
-    <div>
-      <a href="employee-dashboard.html">Dashboard</a>
-      <a href="update-profile.html">Update Profile</a>
-    </div>
-    <button class="logout-btn" id="logout-btn">Logout</button>
-  </nav>
+  <h1>Employee Dashboard</h1>
+  <div id="my-projects">
+    <h2>My Projects</h2>
+    <ul id="project-list"></ul>
+  </div>
 
-  <div class="container">
-    <h1>Employee Dashboard</h1>
-
-    <!-- Assigned Projects Card -->
-    <div class="card" id="my-projects">
-      <h2>My Assigned Projects</h2>
-      <ul id="project-list" class="project-list">Loading projects...</ul>
-    </div>
-
-    <!-- Update Profile Card -->
-    <div class="card" id="profile">
-      <h2>Update Profile</h2>
-      <form id="update-profile-form">
-        <input type="text" id="profile-name" placeholder="Name" required />
-        <input type="email" id="profile-email" placeholder="Email" required />
-        <input type="password" id="profile-password" placeholder="New Password (optional)" />
-        <label for="profile-skills">Select Skills</label>
-        <select id="profile-skills" multiple required>
-          <!-- Skills will be dynamically populated -->
-        </select>
-        <button type="submit">Update Profile</button>
-      </form>
-      <p id="update-message" class="message" style="display: none;"></p>
-    </div>
+  <div id="profile">
+    <h2>Update Profile</h2>
+    <form id="update-profile-form">
+      <input type="text" id="profile-name" placeholder="Name" required />
+      <input type="email" id="profile-email" placeholder="Email" required />
+      <button type="submit">Update</button>
+    </form>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Check if user is logged in and has the 'employee' role
-      const userId = localStorage.getItem("userId");
-      const role = localStorage.getItem("role");
-
-      if (!userId || role !== "employee") {
-        alert("Access denied. Redirecting to login.");
-        window.location.href = "login.html";
-      }
-
-      // Logout Functionality
-      const logoutBtn = document.getElementById("logout-btn");
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("userId");
-        localStorage.removeItem("role");
-        alert("Logged out successfully.");
-        window.location.href = "login.html";
+    async function fetchProjects() {
+      const response = await fetch(`/my-projects/1`, { // Replace 1 with the logged-in employee ID
+        method: "GET",
+        headers: { userRole: "employee" },
       });
+      const projects = await response.json();
+      const projectList = document.getElementById("project-list");
+      projectList.innerHTML = "";
+      projects.forEach((project) => {
+        const li = document.createElement("li");
+        li.textContent = `${project.title} - ${project.status}`;
+        projectList.appendChild(li);
+      });
+    }
 
-      // Fetch and populate skills in the profile update form
-      const fetchSkills = async () => {
-        try {
-          const response = await fetch("/skills", {
-            headers: {
-              "Content-Type": "application/json",
-              "user-id": userId,
-            },
-          });
-
-          if (response.ok) {
-            const skills = await response.json();
-            const skillsDropdown = document.getElementById("profile-skills");
-            skillsDropdown.innerHTML = skills
-              .map(skill => `<option value="${skill.id}">${skill.name}</option>`)
-              .join("");
-          } else {
-            console.error("Failed to fetch skills:", response.statusText);
-          }
-        } catch (error) {
-          console.error("Error fetching skills:", error);
-        }
-      };
-
-      // Fetch and pre-fill user profile data
-      const fetchUserProfile = async () => {
-        try {
-          const response = await fetch(`/users/${userId}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "user-id": userId,
-            },
-          });
-
-          if (response.ok) {
-            const user = await response.json();
-            document.getElementById("profile-name").value = user.name;
-            document.getElementById("profile-email").value = user.email;
-
-            // Select user's existing skills
-            const skillsDropdown = document.getElementById("profile-skills");
-            user.skills.forEach(skillId => {
-              const option = skillsDropdown.querySelector(`option[value="${skillId}"]`);
-              if (option) option.selected = true;
-            });
-          } else {
-            console.error("Failed to fetch user profile:", response.statusText);
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
-      };
-
-      // Handle profile update form submission
-      document.getElementById("update-profile-form").addEventListener("submit", async (e) => {
+    document
+      .getElementById("update-profile-form")
+      .addEventListener("submit", async (e) => {
         e.preventDefault();
-
-        const name = document.getElementById("profile-name").value.trim();
-        const email = document.getElementById("profile-email").value.trim();
-        const password = document.getElementById("profile-password").value.trim();
-        const skills = Array.from(document.getElementById("profile-skills").selectedOptions)
-                          .map(option => parseInt(option.value, 10));
-
-        if (skills.length === 0) {
-          alert("Please select at least one skill.");
-          return;
-        }
-
-        const updateData = { name, email };
-        if (password) updateData.password = password;
-        updateData.skills = skills;
-
-        try {
-          const response = await fetch(`/users/${userId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "user-id": userId,
-            },
-            body: JSON.stringify(updateData),
-          });
-
-          const message = document.getElementById("update-message");
-          if (response.ok) {
-            message.textContent = "Profile updated successfully!";
-            message.className = "message success";
-            message.style.display = "block";
-          } else {
-            const errorData = await response.json();
-            message.textContent = errorData.error || "Failed to update profile.";
-            message.className = "message error";
-            message.style.display = "block";
-          }
-        } catch (error) {
-          console.error("Error updating profile:", error);
-          const message = document.getElementById("update-message");
-          message.textContent = "An error occurred while updating the profile.";
-          message.className = "message error";
-          message.style.display = "block";
+        const name = document.getElementById("profile-name").value;
+        const email = document.getElementById("profile-email").value;
+        const response = await fetch(`/update-profile/1`, { // Replace 1 with the logged-in employee ID
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            userRole: "employee",
+          },
+          body: JSON.stringify({ name, email }),
+        });
+        if (response.ok) {
+          alert("Profile updated successfully!");
+        } else {
+          alert("Error updating profile.");
         }
       });
 
-      // Fetch and display assigned projects
-      async function fetchProjects() {
-        try {
-          const response = await fetch(`/my-projects/${userId}`, {
-            method: "GET",
-            headers: { 
-              "Content-Type": "application/json",
-              "user-id": userId,
-            },
-          });
-
-          const projectList = document.getElementById("project-list");
-          projectList.innerHTML = ""; // Clear the list
-
-          if (response.ok) {
-            const projects = await response.json();
-            if (projects.length === 0) {
-              projectList.textContent = "No projects assigned yet.";
-              projectList.className = "no-data";
-            } else {
-              projects.forEach(project => {
-                const li = document.createElement("li");
-                li.innerHTML = `
-                  <h3>${project.title}</h3>
-                  <div class="project-details">
-                    <p><strong>Description:</strong> ${project.description}</p>
-                    <p><strong>Status:</strong> ${project.status}</p>
-                    <p><strong>Start Date:</strong> ${new Date(project.start_date).toLocaleDateString()}</p>
-                    <p><strong>End Date:</strong> ${new Date(project.end_date).toLocaleDateString()}</p>
-                  </div>
-                `;
-                projectList.appendChild(li);
-              });
-            }
-          } else {
-            projectList.textContent = "Failed to fetch projects.";
-            projectList.className = "no-data";
-          }
-        } catch (error) {
-          console.error("Error fetching projects:", error);
-          const projectList = document.getElementById("project-list");
-          projectList.textContent = "Error loading projects.";
-          projectList.className = "no-data";
-        }
-      }
-
-      // Initialize functions on page load
-      fetchSkills();
-      fetchUserProfile();
-      fetchProjects();
-    });
+    fetchProjects();
   </script>
 </body>
 </html>
