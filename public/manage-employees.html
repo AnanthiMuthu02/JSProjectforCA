@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Employees</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .search-bar {
+      margin: 20px 0;
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -24,7 +50,23 @@
       </select>
       <button type="submit">Add Employee</button>
     </form>
-    <ul id="employee-list"></ul>
+
+    <div class="search-bar">
+      <input type="text" id="search-employee" placeholder="Filter by name, email, or project" />
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Assigned Projects</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="employee-table-body"></tbody>
+    </table>
   </div>
   <script src="js/manage-employees.js"></script>
 </body>
